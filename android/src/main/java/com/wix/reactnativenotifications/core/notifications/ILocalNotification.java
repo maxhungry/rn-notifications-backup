@@ -10,7 +10,7 @@ public interface ILocalNotification {
      * @param notificationId (optional) The specific ID to associated with the notification.
      * @return The ID effectively assigned to the notification (Auto-assigned if not specified as a parameter).
      */
-    int post(@Nullable Integer notificationId);
+    int post(@Nullable Integer notificationId, @Nullable String channelId);
 
     /**
      * Handle an event where notification has already been dispatched and is not being opened by the device user.

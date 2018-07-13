@@ -11,6 +11,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
 
+import android.support.v4.app.NotificationCompat;
+
 import com.facebook.react.bridge.ReactContext;
 import com.wix.reactnativenotifications.core.AppLaunchHelper;
 import com.wix.reactnativenotifications.core.AppLifecycleFacade;
@@ -20,6 +22,7 @@ import com.wix.reactnativenotifications.core.BitmapLoader;
 import com.wix.reactnativenotifications.core.InitialNotificationHolder;
 import com.wix.reactnativenotifications.core.JsIOHelper;
 import com.wix.reactnativenotifications.core.LocalNotificationService;
+import com.wix.reactnativenotifications.core.notifications.channels.ChannelManager;
 
 import static com.wix.reactnativenotifications.Defs.LOGTAG;
 import static com.wix.reactnativenotifications.Defs.NOTIFICATION_OPENED_EVENT_NAME;
@@ -71,10 +74,10 @@ public class LocalNotification implements ILocalNotification {
     }
 
     @Override
-    public int post(Integer notificationId) {
+    public int post(Integer notificationId, String channelId) {
         final int id = notificationId != null ? notificationId : createNotificationId();
         final PendingIntent pendingIntent = createOnOpenedIntent(id);
-        setLargeIconThenPostNotification(id, getNotificationBuilder(pendingIntent));
+        setLargeIconThenPostNotification(id, getNotificationBuilder(pendingIntent, channelId));
         return id;
     }
 
@@ -128,17 +131,35 @@ public class LocalNotification implements ILocalNotification {
         return PendingIntent.getService(mContext, id, serviceIntent, PendingIntent.FLAG_ONE_SHOT);
     }
 
-    protected Notification.Builder getNotificationBuilder(PendingIntent intent) {
+    protected String getChannelId(final String channelId) {
+        if (channelId != null) {
+            return channelId;
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            final String defaultChannelId = ChannelManager.getDefaultChannelId(mContext);
+
+            if (defaultChannelId != null) {
+                Log.i(LOGTAG, "No channel ID provided, defaulting to channel " + defaultChannelId);
+            }
+
+            return defaultChannelId;
+        } else {
+            return null;
+        }
+    }
+
+    protected NotificationCompat.Builder getNotificationBuilder(PendingIntent intent, String channelId) {
         final Integer icon = mNotificationProps.getIcon();
 
-        final Notification.Builder builder = new Notification.Builder(mContext)
-                .setContentTitle(mNotificationProps.getTitle())
-                .setContentText(mNotificationProps.getBody())
-                .setSmallIcon(icon != null ? icon : mContext.getApplicationContext().getApplicationInfo().icon)
-                .setSound(mNotificationProps.getSound())
-                .setContentIntent(intent)
-                .setDefaults(Notification.DEFAULT_ALL)
-                .setAutoCancel(true);
+        final NotificationCompat.Builder builder = new NotificationCompat.Builder(mContext, getChannelId(channelId))
+            .setContentTitle(mNotificationProps.getTitle())
+            .setContentText(mNotificationProps.getBody())
+            .setSmallIcon(icon != null ? icon : mContext.getApplicationContext().getApplicationInfo().icon)
+            .setSound(mNotificationProps.getSound())
+            .setContentIntent(intent)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .setAutoCancel(true);
 
         final Integer color = mNotificationProps.getColor();
 
@@ -150,14 +171,14 @@ public class LocalNotification implements ILocalNotification {
         final Integer lightsOnMs = mNotificationProps.getLightsOnMs();
         final Integer lightsOffMs = mNotificationProps.getLightsOffMs();
 
-        if (lightsColor != null && lightsOnMs != null && lightsOffMs != null) {
+        if (lightsColor != null) {
             builder.setLights(lightsColor, lightsOnMs, lightsOffMs);
         }
 
         return builder;
     }
 
-    protected void setLargeIconThenPostNotification(final int notificationId, final Notification.Builder notificationBuilder) {
+    protected void setLargeIconThenPostNotification(final int notificationId, final NotificationCompat.Builder notificationBuilder) {
         final String icon = mNotificationProps.getLargeIcon();
 
         if (icon != null && (icon.startsWith("http://") || icon.startsWith("https://") || icon.startsWith("file://"))) {

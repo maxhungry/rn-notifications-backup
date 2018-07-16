@@ -97,7 +97,7 @@ public class RNNotificationsModule extends ReactContextBaseJavaModule implements
             promise.resolve(resultantChannelProps != null ? Arguments.fromBundle(resultantChannelProps.asBundle()) : null);
         } else {
             Log.e(LOGTAG, ERROR_MESSAGE_CHANNELS_NOT_SUPPORTED);
-            promise.reject(ERROR_MESSAGE_CHANNELS_NOT_SUPPORTED);
+            promise.reject(ERROR_CODE_CHANNELS_NOT_SUPPORTED, ERROR_MESSAGE_CHANNELS_NOT_SUPPORTED);
         }
     }
 

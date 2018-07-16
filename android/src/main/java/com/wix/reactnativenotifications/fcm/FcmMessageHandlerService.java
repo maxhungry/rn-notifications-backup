@@ -1,5 +1,6 @@
 package com.wix.reactnativenotifications.fcm;
 
+import android.content.Intent;
 import android.util.Log;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -16,5 +17,13 @@ public class FcmMessageHandlerService extends FirebaseMessagingService {
         Log.d(LOGTAG, "New message from firebase");
         final NotificationProps notificationProps = NotificationProps.fromRemoteMessage(this, message);
         new RemoteNotification(this, notificationProps).onReceived();
+    }
+
+    @Override
+    public void onNewToken(final String s)
+    {
+        final Intent intent = new Intent(this, FcmTokenService.class);
+        intent.setAction(FcmTokenService.ACTION_REFRESH_TOKEN);
+        startService(intent);
     }
 }

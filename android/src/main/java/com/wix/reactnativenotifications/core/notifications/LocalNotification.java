@@ -171,7 +171,7 @@ public class LocalNotification implements ILocalNotification {
         final Integer lightsOnMs = mNotificationProps.getLightsOnMs();
         final Integer lightsOffMs = mNotificationProps.getLightsOffMs();
 
-        if (lightsColor != null) {
+        if (lightsColor != null && lightsOnMs != null && lightsOffMs != null) {
             builder.setLights(lightsColor, lightsOnMs, lightsOffMs);
         }
 

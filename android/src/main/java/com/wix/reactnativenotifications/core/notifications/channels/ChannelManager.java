@@ -10,14 +10,14 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
-import android.util.Log;
 
 import java.util.*;
 
-import static com.wix.reactnativenotifications.Defs.LOGTAG;
-
 @RequiresApi(Build.VERSION_CODES.O)
 public final class ChannelManager {
+	private static final String DEFAULT_NOTIFICATION_CHANNEL_ID = "rnn_default";
+	private static final String DEFAULT_NOTIFICATION_CHANNEL_NAME = "Default";
+
 	public static void createChannel(final Context context, final String channelId, final ChannelProps channelProps) {
 		final String name = channelProps.getName() != null ? channelProps.getName() : "Unnamed channel";
 		final int importance = getImportance(channelProps);
@@ -88,12 +88,14 @@ public final class ChannelManager {
 		final NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
 		final List<NotificationChannel> channels = notificationManager != null ? notificationManager.getNotificationChannels() : null;
 
-		if (channels != null && channels.size() > 0)
-		{
+		if (channels != null && channels.size() > 0) {
 			return channels.get(0).getId();
+		} else if (notificationManager != null) {
+			final NotificationChannel channel = new NotificationChannel(DEFAULT_NOTIFICATION_CHANNEL_ID, DEFAULT_NOTIFICATION_CHANNEL_NAME, NotificationManager.IMPORTANCE_DEFAULT);
+			notificationManager.createNotificationChannel(channel);
+			return DEFAULT_NOTIFICATION_CHANNEL_ID;
 		}
 
-		Log.e(LOGTAG, "Unable to obtain default notification channel, no channels exist.");
 		return null;
 	}
 

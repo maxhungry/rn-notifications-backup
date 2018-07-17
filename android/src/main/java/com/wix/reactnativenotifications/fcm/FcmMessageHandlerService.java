@@ -20,8 +20,7 @@ public class FcmMessageHandlerService extends FirebaseMessagingService {
     }
 
     @Override
-    public void onNewToken(final String s)
-    {
+    public void onNewToken(final String s) {
         final Intent intent = new Intent(this, FcmTokenService.class);
         intent.setAction(FcmTokenService.ACTION_REFRESH_TOKEN);
         startService(intent);

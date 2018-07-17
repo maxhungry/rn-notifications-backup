@@ -24,13 +24,14 @@ import com.wix.reactnativenotifications.core.notifications.channels.ChannelManag
 import com.wix.reactnativenotifications.core.notifications.channels.ChannelProps;
 import com.wix.reactnativenotifications.fcm.FcmTokenService;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static com.wix.reactnativenotifications.Defs.LOGTAG;
 
 public class RNNotificationsModule extends ReactContextBaseJavaModule implements AppLifecycleFacade.AppVisibilityListener, Application.ActivityLifecycleCallbacks {
+
+    private static final String ERROR_CODE_CHANNELS_NOT_SUPPORTED = "CHANNELS_NOT_SUPPORTED";
+    private static final String ERROR_MESSAGE_CHANNELS_NOT_SUPPORTED = "Notification channels are only supported Android Oreo onwards.";
 
     public RNNotificationsModule(Application application, ReactApplicationContext reactContext) {
         super(reactContext);
@@ -212,7 +213,4 @@ public class RNNotificationsModule extends ReactContextBaseJavaModule implements
         intent.setAction(action);
         appContext.startService(intent);
     }
-
-    private static final String ERROR_CODE_CHANNELS_NOT_SUPPORTED = "CHANNELS_NOT_SUPPORTED";
-    private static final String ERROR_MESSAGE_CHANNELS_NOT_SUPPORTED = "Notification channels are only supported Android Oreo onwards.";
 }

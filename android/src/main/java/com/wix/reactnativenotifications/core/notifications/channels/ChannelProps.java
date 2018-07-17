@@ -75,7 +75,7 @@ public class ChannelProps {
 
 	@Nullable
 	public Uri getSound() {
-		return rawResourceUriFromString(mProperties.getString(SOUND));
+		return uriFromString(mProperties.getString(SOUND));
 	}
 
 	@Nullable
@@ -169,7 +169,11 @@ public class ChannelProps {
 	}
 
 	@Nullable
-	private Uri rawResourceUriFromString(String string) {
-		return string != null ? Uri.parse("android.resource://" + mContext.getPackageName() + "/raw/" + string) : null;
+	private Uri uriFromString(String string) {
+		if (string != null) {
+			return Uri.parse(string.indexOf("://") > 0 ? string : "android.resource://" + mContext.getPackageName() + "/raw/" + string);
+		}
+
+		return null;
 	}
 }

@@ -156,8 +156,8 @@ public final class ChannelManager {
 
 		final String soundPath = channel.getSound() != null ? channel.getSound().getPath() : null;
 
-		if (soundPath != null && soundPath.length() > 5) {
-			properties.putString(ChannelProps.SOUND, soundPath.substring(5)); // Trim "/raw/"
+		if (soundPath != null) {
+			properties.putString(ChannelProps.SOUND, soundPath.startsWith("/raw/") ? soundPath.substring(5) : soundPath);
 		}
 
 		if (channel.shouldVibrate()) {

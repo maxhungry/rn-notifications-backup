@@ -158,8 +158,13 @@ public class LocalNotification implements ILocalNotification {
             .setSmallIcon(icon != null ? icon : mContext.getApplicationContext().getApplicationInfo().icon)
             .setSound(mNotificationProps.getSound())
             .setContentIntent(intent)
-            .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setAutoCancel(true);
+
+        int defaults = NotificationCompat.DEFAULT_VIBRATE;
+
+        if (mNotificationProps.getSound() == null) {
+            defaults |= NotificationCompat.DEFAULT_SOUND;
+        }
 
         final Integer color = mNotificationProps.getColor();
 
@@ -173,7 +178,11 @@ public class LocalNotification implements ILocalNotification {
 
         if (lightsColor != null && lightsOnMs != null && lightsOffMs != null) {
             builder.setLights(lightsColor, lightsOnMs, lightsOffMs);
+        } else {
+            defaults |= NotificationCompat.DEFAULT_LIGHTS;
         }
+
+        builder.setDefaults(defaults);
 
         return builder;
     }

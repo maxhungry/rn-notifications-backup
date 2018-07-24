@@ -26,10 +26,13 @@ public class NotificationProps {
 
     // Local-only support
 
+    private static final String GROUP = "group";
+    private static final String GROUP_SUMMARY = "groupSummary";
     private static final String LARGE_ICON = "largeIcon"; // Drawable name or URL
     private static final String LIGHTS_COLOR = "lightsColor";
     private static final String LIGHTS_ON_MS = "lightsOnMs";
     private static final String LIGHTS_OFF_MS = "lightsOffMs";
+    private static final String STYLE = "style";
 
     public static NotificationProps fromRemoteMessage(Context context, RemoteMessage remoteMessage) {
         final Bundle properties = new Bundle();
@@ -122,6 +125,16 @@ public class NotificationProps {
     }
 
     @Nullable
+    public String getGroup() {
+        return mProperties.getString(GROUP);
+    }
+
+    @Nullable
+    public Boolean getGroupSummary() {
+        return mProperties.getBoolean(GROUP_SUMMARY);
+    }
+
+    @Nullable
     public String getLargeIcon() {
         return mProperties.getString(LARGE_ICON);
     }
@@ -139,6 +152,11 @@ public class NotificationProps {
     @Nullable
     public Integer getLightsOffMs() {
         return getInteger(LIGHTS_OFF_MS);
+    }
+
+    @Nullable
+    public Bundle getStyle() {
+        return mProperties.getBundle(STYLE);
     }
 
     @Nullable

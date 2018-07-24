@@ -2,7 +2,9 @@ package com.wix.reactnativenotifications.core;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.facebook.common.executors.CallerThreadExecutor;
@@ -23,7 +25,7 @@ public class BitmapLoader {
     public interface OnBitmapLoadedCallback {
         // The lifetime of the Bitmap is only valid for the duration of the callback. If the Bitmap
         // is required for a longer duration it should be copied.
-        void onBitmapLoaded(Bitmap bitmap);
+        void onBitmapLoaded(@Nullable Bitmap bitmap);
     }
 
     private final Context mContext;
@@ -32,7 +34,22 @@ public class BitmapLoader {
         mContext = context;
     }
 
-    public void loadUri(final Uri uri, final OnBitmapLoadedCallback callback) {
+    public void loadImage(final String image, final OnBitmapLoadedCallback callback) {
+        if (image != null) {
+            if ((image.startsWith("http://") || image.startsWith("https://") || image.startsWith("file://"))) {
+                loadUri(Uri.parse(image), callback);
+            } else {
+                final int id = mContext.getResources().getIdentifier(image, "drawable", mContext.getPackageName());
+                final Bitmap bitmap = id != 0 ? BitmapFactory.decodeResource(mContext.getResources(), id) : null;
+
+                callback.onBitmapLoaded(bitmap);
+            }
+        } else {
+            callback.onBitmapLoaded(null);
+        }
+    }
+
+    private void loadUri(final Uri uri, final OnBitmapLoadedCallback callback) {
         final ImageRequest request = ImageRequestBuilder.newBuilderWithSource(uri)
                 .setLowestPermittedRequestLevel(ImageRequest.RequestLevel.FULL_FETCH)
                 .setProgressiveRenderingEnabled(false)

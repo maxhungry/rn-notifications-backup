@@ -10,14 +10,14 @@ public class InitialNotificationHolder {
 
     private NotificationProps mNotification;
 
-    public static void setInstance(InitialNotificationHolder instance) {
+    public static synchronized void setInstance(InitialNotificationHolder instance) {
         sInstance = instance;
     }
 
     /*package*/ InitialNotificationHolder() {
     }
 
-    public static InitialNotificationHolder getInstance() {
+    public static synchronized InitialNotificationHolder getInstance() {
         if (sInstance == null) {
             sInstance = new InitialNotificationHolder();
         }

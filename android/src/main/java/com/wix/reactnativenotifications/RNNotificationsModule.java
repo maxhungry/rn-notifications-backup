@@ -22,6 +22,7 @@ import com.wix.reactnativenotifications.core.notifications.LocalNotification;
 import com.wix.reactnativenotifications.core.notifications.NotificationProps;
 import com.wix.reactnativenotifications.core.notifications.channels.ChannelManager;
 import com.wix.reactnativenotifications.core.notifications.channels.ChannelProps;
+import com.wix.reactnativenotifications.core.notifications.styles.LocalNotificationStyleManager;
 import com.wix.reactnativenotifications.fcm.FcmTokenService;
 
 import java.util.Map;
@@ -41,6 +42,8 @@ public class RNNotificationsModule extends ReactContextBaseJavaModule implements
         }
         AppLifecycleFacadeHolder.get().addVisibilityListener(this);
         application.registerActivityLifecycleCallbacks(this);
+
+        LocalNotificationStyleManager.getInstance().registerDefaultStyles();
     }
 
     @Override

@@ -6,9 +6,8 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.util.Log;
 
 import android.support.v4.app.NotificationCompat;
@@ -23,6 +22,8 @@ import com.wix.reactnativenotifications.core.InitialNotificationHolder;
 import com.wix.reactnativenotifications.core.JsIOHelper;
 import com.wix.reactnativenotifications.core.LocalNotificationService;
 import com.wix.reactnativenotifications.core.notifications.channels.ChannelManager;
+import com.wix.reactnativenotifications.core.notifications.styles.ILocalNotificationStyle;
+import com.wix.reactnativenotifications.core.notifications.styles.LocalNotificationStyleManager;
 
 import static com.wix.reactnativenotifications.Defs.LOGTAG;
 import static com.wix.reactnativenotifications.Defs.NOTIFICATION_OPENED_EVENT_NAME;
@@ -34,7 +35,7 @@ public class LocalNotification implements ILocalNotification {
     private final AppLifecycleFacade mAppLifecycleFacade;
     private final AppLaunchHelper mAppLaunchHelper;
     private final JsIOHelper mJsIOHelper;
-    private final BitmapLoader mImageLoader;
+    private final BitmapLoader mBitmapLoader;
     private final AppVisibilityListener mAppVisibilityListener = new AppVisibilityListener() {
 
         @Override
@@ -48,6 +49,8 @@ public class LocalNotification implements ILocalNotification {
         }
     };
 
+    private Bitmap mLargeIconBitmap;
+
     public static ILocalNotification get(Context context, NotificationProps localNotificationProps) {
         final AppLifecycleFacade appLifecycleFacade = AppLifecycleFacadeHolder.get();
         final AppLaunchHelper appLaunchHelper = new AppLaunchHelper();
@@ -60,13 +63,13 @@ public class LocalNotification implements ILocalNotification {
         return new LocalNotification(context, localNotificationProps, appLifecycleFacade, appLaunchHelper);
     }
 
-    protected LocalNotification(Context context, NotificationProps localNotificationProps, AppLifecycleFacade appLifecycleFacade, AppLaunchHelper appLaunchHelper, JsIOHelper jsIOHelper, BitmapLoader imageLoader) {
+    protected LocalNotification(Context context, NotificationProps localNotificationProps, AppLifecycleFacade appLifecycleFacade, AppLaunchHelper appLaunchHelper, JsIOHelper jsIOHelper, BitmapLoader bitmapLoader) {
         mContext = context;
         mNotificationProps = localNotificationProps;
         mAppLifecycleFacade = appLifecycleFacade;
         mAppLaunchHelper = appLaunchHelper;
         mJsIOHelper = jsIOHelper;
-        mImageLoader = imageLoader;
+        mBitmapLoader = bitmapLoader;
     }
 
     protected LocalNotification(Context context, NotificationProps localNotificationProps, AppLifecycleFacade appLifecycleFacade, AppLaunchHelper appLaunchHelper) {
@@ -77,7 +80,7 @@ public class LocalNotification implements ILocalNotification {
     public int post(Integer notificationId, String channelId) {
         final int id = notificationId != null ? notificationId : createNotificationId();
         final PendingIntent pendingIntent = createOnOpenedIntent(id);
-        setLargeIconThenPostNotification(id, getNotificationBuilder(pendingIntent, channelId));
+        applyStylingThenPostNotification(id, getNotificationBuilder(pendingIntent, channelId));
         return id;
     }
 
@@ -151,10 +154,13 @@ public class LocalNotification implements ILocalNotification {
 
     protected NotificationCompat.Builder getNotificationBuilder(PendingIntent intent, String channelId) {
         final Integer icon = mNotificationProps.getIcon();
+        final Boolean groupSummary = mNotificationProps.getGroupSummary();
 
         final NotificationCompat.Builder builder = new NotificationCompat.Builder(mContext, getChannelId(channelId))
             .setContentTitle(mNotificationProps.getTitle())
             .setContentText(mNotificationProps.getBody())
+            .setGroup(mNotificationProps.getGroup())
+            .setGroupSummary(groupSummary != null ? groupSummary : false)
             .setSmallIcon(icon != null ? icon : mContext.getApplicationContext().getApplicationInfo().icon)
             .setSound(mNotificationProps.getSound())
             .setContentIntent(intent)
@@ -187,36 +193,37 @@ public class LocalNotification implements ILocalNotification {
         return builder;
     }
 
-    protected void setLargeIconThenPostNotification(final int notificationId, final NotificationCompat.Builder notificationBuilder) {
+    protected void applyStylingThenPostNotification(final int notificationId, final NotificationCompat.Builder notificationBuilder) {
         final String icon = mNotificationProps.getLargeIcon();
 
-        if (icon != null && (icon.startsWith("http://") || icon.startsWith("https://") || icon.startsWith("file://"))) {
-            mImageLoader.loadUri(Uri.parse(icon), new BitmapLoader.OnBitmapLoadedCallback() {
-                @Override
-                public void onBitmapLoaded(Bitmap bitmap) {
-                    notificationBuilder.setLargeIcon(bitmap);
-                    postNotification(notificationId, notificationBuilder.build());
-                }
-            });
-        } else {
-            if (icon != null) {
-                final int id = mContext.getResources().getIdentifier(icon, "drawable", mContext.getPackageName());
-                final Bitmap bitmap = id != 0 ? BitmapFactory.decodeResource(mContext.getResources(), id) : null;
-
+        mBitmapLoader.loadImage(icon, new BitmapLoader.OnBitmapLoadedCallback() {
+            @Override
+            public void onBitmapLoaded(Bitmap bitmap) {
                 if (bitmap != null) {
-                    notificationBuilder.setLargeIcon(bitmap);
-                } else {
-                    Log.e(LOGTAG, icon + " does not correspond to a known bitmap drawable");
+                    mLargeIconBitmap = bitmap.copy(bitmap.getConfig(), false);
+                    notificationBuilder.setLargeIcon(mLargeIconBitmap);
+                } else if (icon != null) {
+                    Log.e(LOGTAG, icon + " does not correspond to a loadable bitmap");
                 }
-            }
 
-            postNotification(notificationId, notificationBuilder.build());
-        }
+                LocalNotificationStyleManager.getInstance().applyStyle(mContext, notificationBuilder, mNotificationProps.getStyle(), new ILocalNotificationStyle.OnStylingCompleteCallback() {
+                    @Override
+                    public void onStylingComplete(Context context, NotificationCompat.Builder builder, Bundle properties, boolean applied) {
+                        postNotification(notificationId, notificationBuilder.build());
+                    }
+                });
+            }
+        });
     }
 
     protected void postNotification(int id, Notification notification) {
         final NotificationManager notificationManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(mNotificationProps.getTag(), id, notification);
+
+        if (mLargeIconBitmap != null) {
+            mLargeIconBitmap.recycle();
+            mLargeIconBitmap = null;
+        }
     }
 
     protected int createNotificationId() {

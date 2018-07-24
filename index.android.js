@@ -6,10 +6,12 @@ const RNNotifications = NativeModules.WixRNNotifications;
 let notificationReceivedListener;
 let notificationOpenedListener;
 let registrationTokenUpdateListener;
+let actionFiredListener;
 
 export const EVENT_OPENED = "com.wix.reactnativenotifications.notificationOpened";
 export const EVENT_RECEIVED = "com.wix.reactnativenotifications.notificationReceived";
 export const EVENT_REGISTERED = "com.wix.reactnativenotifications.remoteNotificationsRegistered";
+export const EVENT_ACTION = "com.wix.reactnativenotifications.actionFired";
 
 export const NotificationChannelAndroid = Object.freeze({
   IMPORTANCE: Object.freeze({
@@ -29,6 +31,7 @@ export const NotificationChannelAndroid = Object.freeze({
 
 export class NotificationsAndroid {
   static setNotificationOpenedListener(listener) {
+    NotificationsAndroid.clearNotificationOpenedListener();
     notificationOpenedListener = DeviceEventEmitter.addListener(EVENT_OPENED, (notification) => listener(new NotificationAndroid(notification)));
   }
 
@@ -40,6 +43,7 @@ export class NotificationsAndroid {
   }
 
   static setNotificationReceivedListener(listener) {
+    NotificationsAndroid.clearNotificationReceivedListener();
     notificationReceivedListener = DeviceEventEmitter.addListener(EVENT_RECEIVED, (notification) => listener(new NotificationAndroid(notification)));
   }
 
@@ -59,6 +63,18 @@ export class NotificationsAndroid {
     if (registrationTokenUpdateListener) {
       registrationTokenUpdateListener.remove();
       registrationTokenUpdateListener = null;
+    }
+  }
+
+  static setActionFiredListener(listener) {
+    NotificationsAndroid.clearActionFiredListener();
+    actionFiredListener = DeviceEventEmitter.addListener(EVENT_ACTION, (event) => listener(event.action, event.notificationId));
+  }
+
+  static clearActionFiredListener() {
+    if (actionFiredListener) {
+      actionFiredListener.remove();
+      actionFiredListener = null;
     }
   }
 

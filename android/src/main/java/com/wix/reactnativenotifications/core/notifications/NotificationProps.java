@@ -9,6 +9,7 @@ import android.support.annotation.Nullable;
 
 import com.google.firebase.messaging.RemoteMessage;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 public class NotificationProps {
@@ -26,6 +27,7 @@ public class NotificationProps {
 
     // Local-only support
 
+    private static final String ACTIONS = "actions";
     private static final String GROUP = "group";
     private static final String GROUP_SUMMARY = "groupSummary";
     private static final String LARGE_ICON = "largeIcon"; // Drawable name or URL
@@ -122,6 +124,11 @@ public class NotificationProps {
     @Nullable
     public Integer getColor() {
         return colorFromString(mProperties.getString(COLOR));
+    }
+
+    @Nullable
+    public ArrayList<Bundle> getActions() {
+        return mProperties.getParcelableArrayList(ACTIONS);
     }
 
     @Nullable

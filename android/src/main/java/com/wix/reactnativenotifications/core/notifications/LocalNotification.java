@@ -21,9 +21,12 @@ import com.wix.reactnativenotifications.core.BitmapLoader;
 import com.wix.reactnativenotifications.core.InitialNotificationHolder;
 import com.wix.reactnativenotifications.core.JsIOHelper;
 import com.wix.reactnativenotifications.core.LocalNotificationService;
+import com.wix.reactnativenotifications.core.notifications.actions.Action;
 import com.wix.reactnativenotifications.core.notifications.channels.ChannelManager;
 import com.wix.reactnativenotifications.core.notifications.styles.ILocalNotificationStyle;
 import com.wix.reactnativenotifications.core.notifications.styles.LocalNotificationStyleManager;
+
+import java.util.ArrayList;
 
 import static com.wix.reactnativenotifications.Defs.LOGTAG;
 import static com.wix.reactnativenotifications.Defs.NOTIFICATION_OPENED_EVENT_NAME;
@@ -80,7 +83,7 @@ public class LocalNotification implements ILocalNotification {
     public int post(Integer notificationId, String channelId) {
         final int id = notificationId != null ? notificationId : createNotificationId();
         final PendingIntent pendingIntent = createOnOpenedIntent(id);
-        applyStylingThenPostNotification(id, getNotificationBuilder(pendingIntent, channelId));
+        applyStylingThenPostNotification(id, getNotificationBuilder(pendingIntent, id, channelId));
         return id;
     }
 
@@ -152,7 +155,7 @@ public class LocalNotification implements ILocalNotification {
         }
     }
 
-    protected NotificationCompat.Builder getNotificationBuilder(PendingIntent intent, String channelId) {
+    protected NotificationCompat.Builder getNotificationBuilder(PendingIntent intent, int notificationId, String channelId) {
         final Integer icon = mNotificationProps.getIcon();
         final Boolean groupSummary = mNotificationProps.getGroupSummary();
 
@@ -189,6 +192,18 @@ public class LocalNotification implements ILocalNotification {
         }
 
         builder.setDefaults(defaults);
+
+        final ArrayList<Bundle> actions = mNotificationProps.getActions();
+
+        if (actions != null) {
+            for (final Bundle actionProperties : actions) {
+                final NotificationCompat.Action action = new Action(actionProperties).build(mContext, notificationId);
+
+                if (action != null) {
+                    builder.addAction(action);
+                }
+            }
+        }
 
         return builder;
     }

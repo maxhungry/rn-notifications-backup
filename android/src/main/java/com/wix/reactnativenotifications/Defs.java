@@ -7,4 +7,6 @@ public interface Defs {
 
     String NOTIFICATION_RECEIVED_EVENT_NAME = "com.wix.reactnativenotifications.notificationReceived";
     String NOTIFICATION_OPENED_EVENT_NAME = "com.wix.reactnativenotifications.notificationOpened";
+
+    String ACTION_FIRED_EVENT_NAME = "com.wix.reactnativenotifications.actionFired";
 }

@@ -3,7 +3,6 @@ package com.wix.reactnativenotifications;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -23,7 +22,7 @@ import com.wix.reactnativenotifications.core.notifications.NotificationProps;
 import com.wix.reactnativenotifications.core.notifications.channels.ChannelManager;
 import com.wix.reactnativenotifications.core.notifications.channels.ChannelProps;
 import com.wix.reactnativenotifications.core.notifications.styles.LocalNotificationStyleManager;
-import com.wix.reactnativenotifications.fcm.FcmTokenService;
+import com.wix.reactnativenotifications.fcm.FcmTokenBridge;
 
 import java.util.Map;
 
@@ -34,8 +33,12 @@ public class RNNotificationsModule extends ReactContextBaseJavaModule implements
     private static final String ERROR_CODE_CHANNELS_NOT_SUPPORTED = "CHANNELS_NOT_SUPPORTED";
     private static final String ERROR_MESSAGE_CHANNELS_NOT_SUPPORTED = "Notification channels are only supported Android Oreo onwards.";
 
+    private final FcmTokenBridge fcmTokenBridge;
+
     public RNNotificationsModule(Application application, ReactApplicationContext reactContext) {
         super(reactContext);
+
+        fcmTokenBridge = new FcmTokenBridge(reactContext.getApplicationContext());
 
         if (AppLifecycleFacadeHolder.get() instanceof ReactAppLifecycleFacade) {
             ((ReactAppLifecycleFacade) AppLifecycleFacadeHolder.get()).init(reactContext);
@@ -61,13 +64,13 @@ public class RNNotificationsModule extends ReactContextBaseJavaModule implements
     @ReactMethod
     public void refreshToken() {
         Log.d(LOGTAG, "Native method invocation: refreshToken()");
-        startTokenService(FcmTokenService.ACTION_REFRESH_TOKEN);
+        fcmTokenBridge.refreshToken();
     }
 
     @ReactMethod
     public void invalidateToken() {
         Log.d(LOGTAG, "Native method invocation: invalidateToken()");
-        startTokenService(FcmTokenService.ACTION_INVALIDATE_TOKEN);
+        fcmTokenBridge.invalidateToken();
     }
 
     @ReactMethod
@@ -208,12 +211,5 @@ public class RNNotificationsModule extends ReactContextBaseJavaModule implements
 
     @Override
     public void onActivityDestroyed(Activity activity) {
-    }
-
-    protected void startTokenService(String action) {
-        final Context appContext = getReactApplicationContext().getApplicationContext();
-        final Intent intent = new Intent(appContext, FcmTokenService.class);
-        intent.setAction(action);
-        appContext.startService(intent);
     }
 }

@@ -1,6 +1,5 @@
 package com.wix.reactnativenotifications.fcm;
 
-import android.content.Intent;
 import android.util.Log;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -21,8 +20,7 @@ public class FcmMessageHandlerService extends FirebaseMessagingService {
 
     @Override
     public void onNewToken(final String s) {
-        final Intent intent = new Intent(this, FcmTokenService.class);
-        intent.setAction(FcmTokenService.ACTION_REFRESH_TOKEN);
-        startService(intent);
+        final FcmTokenBridge tokenBridge = new FcmTokenBridge(getApplicationContext());
+        tokenBridge.refreshToken();
     }
 }
